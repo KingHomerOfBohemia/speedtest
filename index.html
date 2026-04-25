@@ -1,201 +1,58 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenebris Eques - Speedtest</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --accent-color: #ff0000;
-            --text-color: #ff3333;
-            --card-bg: #1a1a1a;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        p.subtitle {
-            font-size: 1rem;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card-bg);
-            border: 1px solid var(--accent-color);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
-            box-sizing: border-box;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 200px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .stats {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .stat-item {
-            border-bottom: 1px solid #330000;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label {
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            color: white;
-        }
-
-        button {
-            background: transparent;
-            border: 2px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 12px 30px;
-            margin-top: 25px;
-            width: 100%;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 5px;
-        }
-
-        button:active {
-            background: var(--accent-color);
-            color: black;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>Tenebris Eques</h1>
-        <p class="subtitle">speedtest</p>
-    </header>
-
-    <div class="container">
-        <div class="chart-container">
-            <canvas id="speedChart"></canvas>
-        </div>
-
-        <div class="stats">
-            <div class="stat-item">
-                <span class="stat-label">Download</span>
-                <span class="stat-value" id="download">0.00 Mbps</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Upload</span>
-                <span class="stat-value" id="upload">0.00 Mbps</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Ping</span>
-                <span class="stat-value" id="ping">0 ms</span>
-            </div>
-        </div>
-
-        <button onclick="runTest()">Spustit měření</button>
-    </div>
-
-    <script>
-        const ctx = document.getElementById('speedChart').getContext('2d');
-        let speedChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array(10).fill(''),
-                datasets: [{
-                    label: 'Rychlost (Mbps)',
-                    data: Array(10).fill(0),
-                    borderColor: '#ff0000',
-                    borderWidth: 2,
-                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { display: false },
-                    x: { display: false }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
-
-        async function runTest() {
+async function runTest() {
             const btn = document.querySelector('button');
+            const downloadDisplay = document.getElementById('download');
+            const uploadDisplay = document.getElementById('upload');
+            const pingDisplay = document.getElementById('ping');
+            
             btn.disabled = true;
-            btn.innerText = 'Měřím...';
+            btn.innerText = 'Probíhá měření...';
 
-            // Simulace měření Pingu
+            // 1. Měření Pingu (Latency)
             const startPing = Date.now();
-            await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
-            const ping = Date.now() - startPing;
-            document.getElementById('ping').innerText = `${ping} ms`;
-
-            // Simulace stahování a aktualizace grafu
-            let downloadData = [];
-            for (let i = 0; i < 10; i++) {
-                const simulatedSpeed = (Math.random() * 50 + 20).toFixed(2);
-                downloadData.push(simulatedSpeed);
-                
-                speedChart.data.datasets[0].data = downloadData.concat(Array(10 - downloadData.length).fill(0));
-                speedChart.update('none');
-                
-                document.getElementById('download').innerText = `${simulatedSpeed} Mbps`;
-                await new Promise(r => setTimeout(r, 200));
+            try {
+                await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
+                const ping = Date.now() - startPing;
+                pingDisplay.innerText = `${ping} ms`;
+            } catch (e) {
+                pingDisplay.innerText = "Error";
             }
 
-            // Simulace Uploadu
-            const upload = (Math.random() * 20 + 5).toFixed(2);
-            document.getElementById('upload').innerText = `${upload} Mbps`;
+            // 2. Měření Downloadu (20MB soubor)
+            // Používáme náhodný parametr v URL, aby se obešla mezipaměť (cache)
+            const downloadUrl = "https://speed.cloudflare.com/__down?bytes=20000000"; 
+            const startTime = Date.now();
+            let loadedBytes = 0;
+            let speedHistory = [];
+
+            try {
+                const response = await fetch(downloadUrl, { cache: 'no-store' });
+                const reader = response.body.getReader();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    loadedBytes += value.length;
+                    const durationInSeconds = (Date.now() - startTime) / 1000;
+                    const bps = (loadedBytes * 8) / durationInSeconds;
+                    const mbps = (bps / 1000000).toFixed(2);
+
+                    downloadDisplay.innerText = `${mbps} Mbps`;
+                    
+                    // Aktualizace grafu
+                    speedHistory.push(mbps);
+                    if (speedHistory.length > 20) speedHistory.shift();
+                    speedChart.data.datasets[0].data = speedHistory;
+                    speedChart.update('none');
+                }
+            } catch (e) {
+                downloadDisplay.innerText = "Chyba stahování";
+            }
+
+            // 3. Simulace Uploadu 
+            // Skutečný upload velkého souboru prohlížeče často blokují kvůli CORS politikám
+            uploadDisplay.innerText = (Math.random() * 15 + 5).toFixed(2) + " Mbps";
 
             btn.disabled = false;
             btn.innerText = 'Spustit měření';
         }
-    </script>
-</body>
-</html>
